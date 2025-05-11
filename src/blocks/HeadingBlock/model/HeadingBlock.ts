@@ -1,6 +1,8 @@
 import {BaseBlock} from "../../BaseBlock/model/BaseBlock.ts";
 import type {HeadingBlockData} from "./types.ts";
 import {nanoid} from "nanoid";
+import type {BlockData} from "../../types.ts";
+import {setBlocks} from "../../../editor/model/EditorClass.ts";
 
 export class HeadingBlock extends BaseBlock {
     level: 1 | 2 | 3;
@@ -44,7 +46,40 @@ export class HeadingBlock extends BaseBlock {
     }
 
     onKeyDown(event: KeyboardEvent): void {
-        // Поведение по Enter или Backspace можно добавить позже
+        if (event.key === "Enter") {
+            event.preventDefault();
+
+            const data = this.spitterBlock();
+            if (data) {
+                const leftBlock: BlockData = {
+                    id: nanoid(),
+                    level: this.level,
+                    type: "heading",
+                    text: data.leftContent,
+                    parentId: this.parentId
+                };
+                const rightBlock: BlockData = {
+                    id: nanoid(),
+                    level: this.level,
+                    type: "heading",
+                    text: data.rightContent,
+                    parentId: this.parentId
+                };
+
+
+                const blocks = [...this.editor!.initialBlocks];
+                const index = blocks.findIndex((block) => block.id === this.id);
+
+                if (index !== -1) {
+                    // Удаляем текущий блок
+                    blocks.splice(index, 1, leftBlock, rightBlock);
+                }
+
+                setBlocks(blocks);
+                this.editor!.forceUpdateBlocks()
+            }
+
+        }
     }
 
     override onFocus(): void {

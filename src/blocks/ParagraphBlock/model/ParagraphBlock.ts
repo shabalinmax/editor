@@ -43,61 +43,34 @@ export class ParagraphBlock extends BaseBlock {
         if (event.key === "Enter") {
             event.preventDefault();
 
-            const selection = window.getSelection();
-            if (!selection || selection.rangeCount === 0) return;
-
-            const range = selection.getRangeAt(0);
-            const ref = document.getElementById(this.id);
-            if (!ref || !this.editor) return;
-
-            // Получаем левую часть: от начала элемента до начала выделения
-            const rangeLeft = document.createRange();
-            rangeLeft.selectNodeContents(ref);
-            rangeLeft.setEnd(range.startContainer, range.startOffset);
-
-            const fragmentLeft = rangeLeft.cloneContents();
-            const divLeft = document.createElement("div");
-            divLeft.appendChild(fragmentLeft);
-            const leftContent = divLeft.innerHTML;
-            console.log("Left content:", leftContent);
-
-            // Получаем правую часть: от конца выделения до конца элемента
-            const rangeRight = document.createRange();
-            rangeRight.selectNodeContents(ref);
-            rangeRight.setStart(range.endContainer, range.endOffset);
-
-            const fragmentRight = rangeRight.cloneContents();
-            const divRight = document.createElement("div");
-            divRight.appendChild(fragmentRight);
-            const rightContent = divRight.innerHTML;
-            console.log("Right content:", rightContent);
-
-            // const leftBlock = new ParagraphBlock({
-            //     id: nanoid(),
-            //     text: rightContent,
-            //     parentId: this.parentId,
-            // });
-            // const rightBlock = new ParagraphBlock({
-            //     id: nanoid(),
-            //     text: leftContent,
-            //     parentId: this.parentId
-            // })
-            const leftBlock: BlockData = {id: nanoid(), type: "paragraph", text: leftContent, parentId: this.parentId};
-            const rightBlock: BlockData = {
-                id: nanoid(),
-                type: "paragraph",
-                text: rightContent,
-                parentId: this.parentId
-            };
+            const data = this.spitterBlock();
+            if (data) {
+                const leftBlock: BlockData = {
+                    id: nanoid(),
+                    type: "paragraph",
+                    text: data.leftContent,
+                    parentId: this.parentId
+                };
+                const rightBlock: BlockData = {
+                    id: nanoid(),
+                    type: "paragraph",
+                    text: data.rightContent,
+                    parentId: this.parentId
+                };
 
 
-            const blocks: BlockData[] = [
-                ...this.editor.initialBlocks.filter((block) => block.id !== this.id),
-                leftBlock,
-                rightBlock,
-            ]
-            setBlocks(blocks);
-            this.editor.forceUpdateBlocks()
+                const blocks = [...this.editor!.initialBlocks];
+                const index = blocks.findIndex((block) => block.id === this.id);
+
+                if (index !== -1) {
+                    // Удаляем текущий блок
+                    blocks.splice(index, 1, leftBlock, rightBlock);
+                }
+
+                setBlocks(blocks);
+                this.editor!.forceUpdateBlocks()
+            }
+
         }
     }
 
