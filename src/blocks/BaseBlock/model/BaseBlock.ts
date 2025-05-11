@@ -1,25 +1,24 @@
-import type {HTMLText} from "./types.ts";
 import {nanoid} from "nanoid";
 import type {EditorClass} from "../../../editor/model/EditorClass.ts";
+import type { JSX } from "react";
 
 export abstract class BaseBlock {
     id: string;
-    text: HTMLText;
     isFocus: boolean = false;
     editor?: EditorClass;
 
-    constructor({id, text}: { id?: string, text: HTMLText }) {
+    constructor({id}: { id?: string }) {
         this.id = id ?? nanoid();
-        this.text = text;
     }
 
     attachEditor(editor: EditorClass) {
         this.editor = editor;
     }
 
-    updateText(newText: HTMLText) {
-        this.text = newText;
-    }
+    getTag(): keyof JSX.IntrinsicElements | null {
+        return null
+    };
+
 
     abstract onKeyDown(event: KeyboardEvent): void;
 

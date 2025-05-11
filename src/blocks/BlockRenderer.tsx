@@ -1,53 +1,96 @@
-import React, {useRef, useEffect} from "react";
-import type {JSX} from "react";
-import type {BaseBlock} from "./BaseBlock/model/BaseBlock.ts";
-import {HeadingBlock} from "./HeadingBlock/model/HeadingBlock.ts";
-import {ParagraphBlock} from "./ParagraphBlock/model/ParagraphBlock.ts";
+import React, { useRef } from "react";
+import { HeadingBlock } from "./HeadingBlock/model/HeadingBlock.ts";
+import { ParagraphBlock } from "./ParagraphBlock/model/ParagraphBlock.ts";
+import { BulletListBlock } from "./ListBlock/model/BulletListBlock.ts";
+import { NumberedListBlock } from "./ListBlock/model/NumberedListBlock.ts";
+import { CheckboxListBlock } from "./ListBlock/model/CheckboxListBlock.ts";
+import type { Block } from "./types.ts";
 
 interface Props {
-    block: BaseBlock;
+    block: Block;
 }
 
 export const BlockRenderer: React.FC<Props> = ({ block }) => {
     const ref = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        const el = ref.current;
-        if (!el) return;
-
-        const handleFocus = () => block.onFocus();
-        const handleBlur = () => block.onBlur();
-        const handleKeyDown = (e: KeyboardEvent) => block.onKeyDown(e);
-
-        el.addEventListener("focus", handleFocus);
-        el.addEventListener("blur", handleBlur);
-        el.addEventListener("keydown", handleKeyDown);
-
-        return () => {
-            el.removeEventListener("focus", handleFocus);
-            el.removeEventListener("blur", handleBlur);
-            el.removeEventListener("keydown", handleKeyDown);
-        };
-    }, [block]);
-
     const commonProps = {
         ref,
+        id: block.id,
+        'data-block-id': block.id,
         contentEditable: true,
         suppressContentEditableWarning: true,
-        dangerouslySetInnerHTML: { __html: block.text },
-        className: block.isFocus ? "border-blue-500 border" : "",
+
     };
 
-    if (block instanceof ParagraphBlock) return <div {...commonProps} />;
+    if (block instanceof ParagraphBlock) {
+        const Tag = block.getTag();
+        return (
+            <Tag
+                {...commonProps}
+                dangerouslySetInnerHTML={{ __html: block.text }}
+            />
+        );
+    }
+
     if (block instanceof HeadingBlock) {
-        const Tag = `h${block.level}` as keyof JSX.IntrinsicElements;
-        return React.createElement(Tag, {
-            ref: ref,
-            contentEditable: true,
-            suppressContentEditableWarning: true,
-            dangerouslySetInnerHTML: { __html: block.text },
-            className: block.isFocus ? "border-blue-500 border" : "",
-        });
+        const Tag = block.getTag() ;
+        return (
+            <Tag
+                {...commonProps}
+                dangerouslySetInnerHTML={{ __html: block.text }}
+            />
+        );
+    }
+
+    if (block instanceof BulletListBlock) {
+        return (
+            <ul data-block-id={block.id} style={{ paddingLeft: "20px" }}>
+                {block.children.map((child) => (
+                    <li key={child.id}>
+                        <BlockRenderer block={child} />
+                    </li>
+                ))}
+            </ul>
+        );
+    }
+
+    if (block instanceof NumberedListBlock) {
+        return (
+            <ol data-block-id={block.id} style={{ paddingLeft: "20px" }}>
+                {block.children.map(child => (
+                    <li key={child.id}>
+                        <BlockRenderer block={child} />
+                    </li>
+                ))}
+            </ol>
+        );
+    }
+
+    if (block instanceof CheckboxListBlock) {
+        return (
+            <ul data-block-id={block.id} style={{ paddingLeft: "20px" }}>
+                {block.children.map(child => (
+                    <li key={child.id} style={{ display: "flex", alignItems:"center"}}>
+                        <div
+                            contentEditable={false}
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                width: "16px",
+                                height: "16px",
+                                border: "1px solid #ccc",
+                                borderRadius: "3px",
+                                backgroundColor: "#fff",
+                                marginRight: "10px",
+                                cursor: "pointer",
+                                userSelect: "none",
+                            }}
+                        />
+                        <BlockRenderer block={child} />
+                    </li>
+                ))}
+            </ul>
+        );
     }
 
     return null;
