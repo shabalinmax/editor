@@ -4,10 +4,12 @@ import type {ListBlockData} from "./types.ts";
 
 export class BulletListBlock extends BaseBlock {
     children: Block[];
+    parentId: string | null
 
-    constructor(id: string, children:Block[] = []) {
+    constructor({ id, children, parentId }: { id: string, children: Block[], parentId: string | null }) {
         super({ id });
         this.children = children;
+        this.parentId = parentId
     }
 
     addChild(block: Block) {

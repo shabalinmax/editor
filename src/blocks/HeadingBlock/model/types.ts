@@ -5,4 +5,5 @@ export interface HeadingBlockData {
     level: 1 | 2 | 3;
     id: string;
     text: HTMLText;
+    parentId: string | null;
 }

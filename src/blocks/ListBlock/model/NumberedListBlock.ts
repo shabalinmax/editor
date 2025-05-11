@@ -4,10 +4,12 @@ import type {KeyboardEvent} from "react";
 
 export class NumberedListBlock extends BaseBlock {
     children: Block[];
+    parentId: string | null
 
-    constructor(id: string, children: Block[] = []) {
+    constructor({ id, children, parentId }: { id: string, children: Block[], parentId: string | null }) {
         super({id});
         this.children = children;
+        this.parentId = parentId;
     }
 
     toData(): BlockData {

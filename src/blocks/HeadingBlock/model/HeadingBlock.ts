@@ -1,4 +1,3 @@
-import type { JSX } from "react";
 import {BaseBlock} from "../../BaseBlock/model/BaseBlock.ts";
 import type {HeadingBlockData} from "./types.ts";
 import {nanoid} from "nanoid";
@@ -6,12 +5,15 @@ import {nanoid} from "nanoid";
 export class HeadingBlock extends BaseBlock {
     level: 1 | 2 | 3;
     text: string;
-    constructor({ text, level, id}: {text: string, level: 1 | 2 | 3, id?: string}) {
+    parentId: string | null;
+
+    constructor({text, level, id, parentId}: { text: string, level: 1 | 2 | 3, id?: string, parentId: string | null }) {
         super({
             id: id ?? nanoid(),
         });
         this.text = text;
         this.level = level;
+        this.parentId = parentId;
     }
 
     getTag() {
@@ -22,7 +24,8 @@ export class HeadingBlock extends BaseBlock {
         return new HeadingBlock({
             id: data.id,
             text: data.text,
-            level: data.level
+            level: data.level,
+            parentId: data.parentId
         });
     }
 
@@ -32,6 +35,7 @@ export class HeadingBlock extends BaseBlock {
             level: this.level,
             text: this.text,
             id: this.id,
+            parentId: this.parentId
         };
     }
 
