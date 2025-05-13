@@ -60,7 +60,7 @@ export const setBlocks = createEvent<BlockData[]>();
 initialBlocks.on(setBlocks, (_, data) => data);
 
 
-type EditorUpdateCallback = () => void;
+type EditorUpdateCallback = () => Promise<void>;
 
 export class EditorClass {
     blocks: Block[];
@@ -80,7 +80,7 @@ export class EditorClass {
             );
     }
 
-    forceUpdateBlocks() {
+    async forceUpdateBlocks() {
         this.initialBlocks = initialBlocks.getState();
         this.blocks = initialBlocks
             .getState()
@@ -88,15 +88,15 @@ export class EditorClass {
             .map((data) =>
                 createBlockFromData(data, this, this.blocksMap, null, initialBlocks.getState())
             );
-        this.forceRenderUpdate();
+        await this.forceRenderUpdate();
     }
 
-    setOnUpdate(callback: EditorUpdateCallback) {
+    async setOnUpdate(callback: EditorUpdateCallback) {
         this.updateCallback = callback;
     }
 
-    forceRenderUpdate() {
-        this.updateCallback?.();
+    async forceRenderUpdate() {
+      await this.updateCallback?.();
     }
 
     setActiveBlock(id: string | null) {
@@ -105,7 +105,6 @@ export class EditorClass {
     handleKeyDown(containerEl: HTMLElement, event: FormEvent<HTMLDivElement>) {
         if (!this.activeBlockId) return;
         const block = this.blocksMap.get(this.activeBlockId);
-        console.log('block', block, this.activeBlockId)
         if (block) {
             block.onKeyDown(event);
         }
@@ -120,7 +119,6 @@ export class EditorClass {
     }
 
     handleSelect(event: Event) {
-        console.log('sdad')
         const selection = window.getSelection();
         if (!selection || selection.rangeCount === 0) return;
         const isBlock = (el: Element) => !!el.getAttribute('data-block-id')

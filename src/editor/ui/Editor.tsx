@@ -7,12 +7,32 @@ const editorInstance = new EditorClass();
 
 export const Editor: React.FC = () => {
     const [editor] = useState(editorInstance);
-    const [, forceRender] = useState({});
     const editorRef = useRef<HTMLDivElement>(null);
+    const [, setRender] = useState<object>({});
+    const resolveRef = useRef<(() => void) | null>(null);
+    const promiseRef = useRef<Promise<void> | null>(null);
+
+    const forceRender = () => {
+        // Создаем новый промис и сохраняем его резолвер
+        promiseRef.current = new Promise<void>((resolve) => {
+            resolveRef.current = resolve;
+        });
+        setRender({}); // Обновляем состояние
+        return promiseRef.current;
+    };
+
+    // После обновления, вызываем resolve
+    useEffect(() => {
+        if (resolveRef.current) {
+            resolveRef.current();
+            resolveRef.current = null;
+        }
+    });
+
 
     useEffect(() => {
-        editor.setOnUpdate(() => {
-            forceRender({});
+        editor.setOnUpdate(async () => {
+            forceRender();
         });
     }, [editor]);
     return (
@@ -33,7 +53,7 @@ export const Editor: React.FC = () => {
         >
             {
                 editor.blocks.map((block) => {
-                    return <BlockRenderer block={block}/>
+                    return <BlockRenderer key={block.id + '_blockRender'} block={block}/>
                 })
             }
         </div>

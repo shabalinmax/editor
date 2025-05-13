@@ -18,13 +18,13 @@ export const BlockRenderer: React.FC<Props> = ({ block }) => {
         'data-block-id': block.id,
         contentEditable: true,
         suppressContentEditableWarning: true,
-
     };
 
     if (block instanceof ParagraphBlock) {
         const Tag = block.getTag();
         return (
             <Tag
+                key={block.id}
                 {...commonProps}
                 dangerouslySetInnerHTML={{ __html: block.text }}
             />
@@ -32,9 +32,10 @@ export const BlockRenderer: React.FC<Props> = ({ block }) => {
     }
 
     if (block instanceof HeadingBlock) {
-        const Tag = block.getTag() ;
+        const Tag = block.getTag();
         return (
             <Tag
+                key={block.id}
                 {...commonProps}
                 dangerouslySetInnerHTML={{ __html: block.text }}
             />
@@ -43,9 +44,9 @@ export const BlockRenderer: React.FC<Props> = ({ block }) => {
 
     if (block instanceof BulletListBlock) {
         return (
-            <ul data-block-id={block.id} style={{ paddingLeft: "20px" }}>
+            <ul key={block.id + "_ul"} data-block-id={block.id} style={{ paddingLeft: "20px" }}>
                 {block.children.map((child) => (
-                    <li key={child.id}>
+                    <li key={child.id + "_li"}>
                         <BlockRenderer block={child} />
                     </li>
                 ))}
@@ -55,9 +56,9 @@ export const BlockRenderer: React.FC<Props> = ({ block }) => {
 
     if (block instanceof NumberedListBlock) {
         return (
-            <ol data-block-id={block.id} style={{ paddingLeft: "20px" }}>
-                {block.children.map(child => (
-                    <li key={child.id}>
+            <ol key={block.id + "_ol"} data-block-id={block.id} style={{ paddingLeft: "20px" }}>
+                {block.children.map((child) => (
+                    <li key={child.id + "_li"}>
                         <BlockRenderer block={child} />
                     </li>
                 ))}
@@ -67,26 +68,28 @@ export const BlockRenderer: React.FC<Props> = ({ block }) => {
 
     if (block instanceof CheckboxListBlock) {
         return (
-            <ul data-block-id={block.id} style={{ paddingLeft: "20px" }}>
-                {block.children.map(child => (
-                    <li key={child.id} style={{ display: "flex", alignItems:"center"}}>
-                        <div
+            <ul key={block.id + "_checkbox_ul"} data-block-id={block.id} id={block.id} style={{ paddingLeft: "0" }}>
+                {block.children.map((child) => (
+                    <li
+                        key={child.id + "_li"}
+                        style={{
+                            display: "flex",
+                            gap: "8px",
+                            alignItems: "flex-start",
+                        }}
+                    >
+                        <span
+                            key={child.id + "_checkbox"}
                             contentEditable={false}
                             style={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                width: "16px",
-                                height: "16px",
-                                border: "1px solid #ccc",
-                                borderRadius: "3px",
-                                backgroundColor: "#fff",
-                                marginRight: "10px",
-                                cursor: "pointer",
-                                userSelect: "none",
+                                marginTop: "1rem",
                             }}
-                        />
-                        <BlockRenderer block={child} />
+                        >
+                            <input type="checkbox" />
+                        </span>
+                        <div key={child.id + "_wrapper"} style={{ flex: 1 }}>
+                            <BlockRenderer block={child} />
+                        </div>
                     </li>
                 ))}
             </ul>

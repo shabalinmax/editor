@@ -45,27 +45,43 @@ export class HeadingBlock extends BaseBlock {
         this.text = text;
     }
 
-    onKeyDown(event: KeyboardEvent): void {
+    async delete() {
+        const blocks = [...this.editor!.initialBlocks];
+        const index = blocks.findIndex((block) => block.id === this.id);
+        if (index !== -1) {
+            blocks.splice(index, 1);
+        }
+        setBlocks(blocks);
+        await this.editor!.forceUpdateBlocks();
+    }
+
+    async onKeyDown(event: KeyboardEvent) {
         if (event.key === "Enter") {
             event.preventDefault();
 
             const data = this.spitterBlock();
             if (data) {
+                const clean = (str: string) => str.replace(/[\u200B-\u200D\uFEFF]/g, "").trim();
+
+                if (!clean(data.leftContent) && !clean(data.rightContent)) {
+                    await this.delete();
+                    return;
+                }
+
                 const leftBlock: BlockData = {
                     id: nanoid(),
-                    level: this.level,
                     type: "heading",
-                    text: data.leftContent,
+                    level: this.level,
+                    text: data.leftContent || "\u200B",
                     parentId: this.parentId
                 };
                 const rightBlock: BlockData = {
                     id: nanoid(),
-                    level: this.level,
                     type: "heading",
-                    text: data.rightContent,
+                    level: this.level,
+                    text: data.rightContent || "\u200B",
                     parentId: this.parentId
                 };
-
 
                 const blocks = [...this.editor!.initialBlocks];
                 const index = blocks.findIndex((block) => block.id === this.id);
@@ -74,9 +90,18 @@ export class HeadingBlock extends BaseBlock {
                     // Удаляем текущий блок
                     blocks.splice(index, 1, leftBlock, rightBlock);
                 }
-
                 setBlocks(blocks);
-                this.editor!.forceUpdateBlocks()
+                await this.editor!.forceUpdateBlocks()
+
+                const paragraphBlock = document.getElementById(rightBlock.id) as HTMLParagraphElement;
+                const range = document.createRange();
+                const selection = window.getSelection();
+                if (paragraphBlock?.firstChild && selection) {
+                    range.setStart(paragraphBlock.firstChild, 0);
+                    range.collapse(true);
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                }
             }
 
         }
